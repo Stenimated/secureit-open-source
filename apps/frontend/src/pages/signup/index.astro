@@ -1,0 +1,15 @@
+---
+import Layout from "@/layouts/standard.astro";
+import Menu from "./signup-menu";
+import { Middleware } from "@/util/middeware";
+const result = await Middleware(Astro);
+if (result) {
+    return result;
+}
+---
+
+<Layout title="Signup">
+    <div class="w-full flex justify-center px-5 flex-row">
+        <Menu client:load />
+    </div>
+</Layout>

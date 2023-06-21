@@ -1,0 +1,83 @@
+---
+import Layout from "@/layouts/standard.astro";
+import { API_URL } from "@/util/base-url";
+import type {
+    Company,
+    PDFProduct,
+    ProductImage,
+    ProductPage,
+    ProductPageI18,
+    Video,
+} from "database";
+import Site from "./site";
+import { Middleware } from "@/util/middeware";
+import pkg from "countries-list";
+const { languages, countries } = pkg;
+
+const result = await Middleware(Astro);
+
+if (result) {
+    return result;
+}
+
+export type FULL_PACKAGE = ProductPage & {
+    product_page_i18: (ProductPageI18 & {
+        longLanguage?: string;
+    })[];
+    pdfs: PDFProduct[];
+    video: Video[];
+    images: ProductImage[];
+    company: Company;
+};
+
+const [page] = (await Promise.all([
+    fetch(
+        `${API_URL}/product/search/${Astro.params.id}?lang=${Astro.params.lang}`,
+        {}
+    )
+        .then((res) => res.json())
+        .then((res) => {
+            if (!res.ok) {
+                throw new Error(res.statusText);
+            }
+            return res.company;
+        })
+        .catch(() => {
+            return [null, null];
+        }),
+])) as [FULL_PACKAGE?];
+
+const translatedPage = page?.product_page_i18[0];
+
+if (!page || !translatedPage) {
+    return new Response("Not found", { status: 404 });
+}
+
+const small =
+    (languages as any)[translatedPage.language.toLowerCase()] ??
+    (countries as any)[translatedPage.language.toUpperCase()];
+
+let lang = small ? small.native : `Not known ${translatedPage.language}`;
+---
+
+<Layout title={`${page.name} | Language selection`}>
+    <div class="w-full flex justify-center items-center mt-10 flex-col px-5">
+        <img
+            src={page.images[0]?.url ?? ""}
+            alt={`${page.name} icon`}
+            width="800"
+            height="800"
+            class="w-96 h-auto object-contain"
+        />
+
+        <div class="mt-10 sm:w-[40rem] w-full">
+            <p class="font-light text-gray-300">{lang}</p>
+            <p class="text-xl text-gray-400 font-light">Produkt</p>
+            <p class="text-3xl">{page.name}</p>
+
+            <p>{translatedPage?.description}</p>
+        </div>
+
+        <Site client:load data={page} />
+    </div>
+</Layout>

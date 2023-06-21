@@ -1,0 +1,218 @@
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["fullTextSearch", "fullTextIndex"]
+}
+
+// generator zod {
+//   provider = "nestjs-zod-prisma"
+//   output   = "./src/zod" // (default) the directory where generated zod schemas will be saved
+
+//   relationModel = true // (default) Create and export both plain and related models.
+//   // relationModel         = "default" // Do not export model without relations.
+//   // relationModel         = false // Do not generate related model
+
+//   generateDto = true // (default) Generate DTOs for NestJS
+
+//   modelCase = "PascalCase" // (default) Output models using pascal case (ex. UserModel, PostModel)
+//   // modelCase             = "camelCase" // Output models using camel case (ex. userModel, postModel)
+
+//   modelSuffix = "Model" // (default) Suffix to apply to your prisma models when naming Zod schemas
+
+//   dtoCase = "PascalCase" // (default) Output DTOs using pascal case (ex. UserDto, PostDto)
+//   // dtoCase             = "camelCase" // Output DTOs using camel case (ex. userDto, postDto)
+
+//   dtoSuffix = "Dto" // (default) Suffix to apply to your prisma models when naming DTOs
+
+//   // useDecimalJs          = false // (default) represent the prisma Decimal type using as a JS number
+//   useDecimalJs = true // represent the prisma Decimal type using Decimal.js (as Prisma does)
+
+//   imports = null // (default) will import the referenced file in generated schemas to be used via imports.someExportedVariable
+
+//   // https://www.prisma.io/docs/concepts/components/prisma-client/working-with-fields/working-with-json-fields#filtering-by-null-values
+//   prismaJsonNullability = true // (default) uses prisma's scheme for JSON field nullability
+//   // prismaJsonNullability = false // allows null assignment to optional JSON fields
+// }
+
+datasource db {
+  provider     = "mysql"
+  url          = env("DATABASE_URL")
+  relationMode = "prisma"
+}
+
+model OAuth2Accounts {
+  id                  String  @id @default(cuid())
+  user_id             String
+  type                String
+  provider            String
+  provider_account_id String
+  refresh_token       String? @db.Text
+  access_token        String? @db.Text
+  expires_at          Int?
+  token_type          String?
+  scope               String?
+  id_token            String? @db.Text
+  session_state       String?
+  user                User?   @relation(fields: [user_id], references: [id])
+
+  @@unique([provider, provider_account_id])
+  @@index([user_id])
+}
+
+model Session {
+  id            String   @id @default(cuid())
+  session_token String   @unique
+  expires       DateTime
+
+  user    User?   @relation(fields: [user_id], references: [id])
+  user_id String?
+  meta    String? @db.Text
+
+  @@index([user_id])
+}
+
+enum Role {
+  ADMIN
+  USER
+  EMPLOYEE
+}
+
+model User {
+  id             String    @id @default(cuid())
+  name           String?
+  email          String?   @unique
+  email_verified DateTime?
+  image          String?
+
+  oauth2_accounts OAuth2Accounts[]
+  sessions        Session[]
+  local_auth      UserLocalAuth?
+  role            Role?            @default(USER)
+}
+
+model UserLocalAuth {
+  id         String @id @default(cuid())
+  user_id    String @unique
+  salt       String
+  encryption String
+  password   String
+  user       User   @relation(fields: [user_id], references: [id])
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+model Company {
+  id           String        @id @default(cuid())
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  name         String
+  logo         String?
+  website      String
+  email        String
+  phone        String
+  address      String
+  city         String
+  state        String
+  zip          String
+  country      String
+  image_id     String?
+  product_page ProductPage[]
+
+  @@index([image_id])
+  @@fulltext([name])
+}
+
+model PDFProduct {
+  id              String      @id @default(cuid())
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+  language        String
+  title           String
+  type            PDFType
+  url             String      @default("")
+  image_id        String?
+  image           String?
+  cover           String?
+  product_page_id String
+  product_page    ProductPage @relation(fields: [product_page_id], references: [id])
+
+  @@index([product_page_id])
+  @@fulltext([title])
+}
+
+enum Branch {
+  MEDICAL
+  BUILDING
+  OTHER
+}
+
+enum PDFType {
+  DATA_SHEET
+  MANUAL
+  OTHER
+}
+
+model Video {
+  id              String      @id @default(cuid())
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+  language        String
+  title           String
+  url             String      @default("")
+  product_page_id String
+  product_page    ProductPage @relation(fields: [product_page_id], references: [id])
+
+  @@index([product_page_id])
+  @@fulltext([title])
+}
+
+model ProductPage {
+  id         String   @id @default(cuid())
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  name       String
+  company_id String
+
+  pdfs             PDFProduct[]
+  company          Company          @relation(fields: [company_id], references: [id])
+  images           ProductImage[]
+  video            Video[]
+  product_page_i18 ProductPageI18[]
+  branch           Branch?          @default(OTHER)
+  is_hidden        Boolean?         @default(false)
+
+  @@index([company_id])
+  @@fulltext([name])
+}
+
+model ProductPageI18 {
+  id          String   @id @default(cuid())
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  language    String
+  title       String
+  description String   @db.LongText
+
+  product_page_id String
+  product_page    ProductPage @relation(fields: [product_page_id], references: [id])
+
+  @@index([product_page_id])
+  @@fulltext([title, description])
+}
+
+model ProductImage {
+  id              String      @id @default(cuid())
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+  url             String      @default("")
+  order           Int
+  product_page_id String
+  product_page    ProductPage @relation(fields: [product_page_id], references: [id])
+
+  @@index([product_page_id])
+}

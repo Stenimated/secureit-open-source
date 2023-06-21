@@ -1,0 +1,13 @@
+---
+import Layout from "@/layouts/admin.astro";
+import { Middleware } from "@/util/middeware";
+import Site from "./site";
+const result = await Middleware(Astro);
+if (result) {
+    return result;
+}
+---
+
+<Layout title="Employee/Companies">
+    <Site client:load />
+</Layout>

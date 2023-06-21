@@ -1,0 +1,14 @@
+---
+import Layout from "@/layouts/standard.astro";
+import { Middleware } from "@/util/middeware";
+import Site from "./site";
+
+const result = await Middleware(Astro);
+if (result) {
+    return result;
+}
+---
+
+<Layout title="Search">
+    <Site client:load />
+</Layout>

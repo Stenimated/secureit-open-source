@@ -1,0 +1,10 @@
+---
+import Layout from "@/layouts/branch.astro";
+import { Middleware } from "@/util/middeware";
+const result = await Middleware(Astro);
+if (result) {
+    return result;
+}
+---
+
+<Layout title="Hello world" icon="/image/helse.jpg" />

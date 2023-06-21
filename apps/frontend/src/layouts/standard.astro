@@ -1,0 +1,43 @@
+---
+import Layout from "./layout.astro";
+import LoginDropdown from "@/components/layout/login-dropdown";
+import Alert from "@/components/layout/alert";
+export interface Props {
+    title: string;
+}
+
+const { title } = Astro.props;
+---
+
+<Layout title={title}>
+    <div
+        class="w-full h-14 border-b text-center bg-slate-50 flex justify-center px-5"
+    >
+        <div class="w-full flex flex-row h-14 max-w-screen translate-x-[-6px]">
+            <div class="flex flex-row items-center h-full">
+                <a href="/"
+                    ><img
+                        src={"/logo.png"}
+                        alt="Secureit UB"
+                        width="35"
+                        height="35"
+                    /></a
+                >
+            </div>
+
+            <div
+                class="font-medium h-full flex flex-row justify-center items-center space-x-6 ml-8"
+            >
+                <!-- Links -->
+                <a href="/">Hjem</a>
+                <a href="/">Om oss</a>
+            </div>
+        </div>
+        <div class="flex justify-center items-center h-full space-x-5">
+            <!-- Login -->
+            <LoginDropdown client:load />
+        </div>
+    </div>
+    <Alert client:load />
+    <slot />
+</Layout>

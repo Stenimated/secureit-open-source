@@ -1,0 +1,29 @@
+---
+import Standard from "@/layouts/standard.astro";
+
+export interface Props {
+    title: string;
+    icon: string;
+}
+---
+
+<Standard title={Astro.props.title}>
+    <div class="flex justify-center flex-row">
+        <!-- Overlay -->
+        <div
+            class="w-screen h-[30rem] z-40 bg-black bg-opacity-70 absolute text-white flex justify-center items-center text-5xl"
+        >
+            <h1>{Astro.props.title}</h1>
+        </div>
+        <div class="w-screen h-[30rem]">
+            <img
+                src={Astro.props.icon}
+                class="object-cover object-top h-full"
+                width="1980"
+                height="600"
+            />
+        </div>
+
+        <slot />
+    </div>
+</Standard>

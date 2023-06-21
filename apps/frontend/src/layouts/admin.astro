@@ -1,0 +1,62 @@
+---
+import DropdownAdminDashboard from "@/components/admin/dropdown-dashboard";
+import Standard from "@/layouts/standard.astro";
+interface Props {
+    title?: string;
+}
+
+const adminRoutes: Array<
+    { name: string } & (
+        | { type: "multi"; items: Item[] }
+        | { type: "single"; link: string }
+    )
+> = [
+    {
+        name: "Dashboard",
+        type: "single",
+        link: "/employee",
+    },
+    {
+        name: "User management",
+        type: "single",
+        link: "/employee/users",
+    },
+    {
+        name: "Companies",
+        type: "single",
+        link: "/employee/companies",
+    },
+    {
+        name: "Products",
+        type: "single",
+        link: "/employee/products",
+    },
+];
+
+type Item = {
+    name: string;
+    slug: string;
+};
+---
+
+<Standard title={Astro.props.title ?? "Admin"}>
+    <div class="h-full w-72 border-r fixed flex flex-col">
+        <div class={"inset-x-0 bottom-0 mt-px"}>
+            <nav class="space-y-16 px-2 py-5">
+                {
+                    adminRoutes.map((section) => {
+                        return (
+                            <DropdownAdminDashboard
+                                client:load
+                                data={section}
+                            />
+                        );
+                    })
+                }
+            </nav>
+        </div>
+    </div>
+    <div class="ml-72">
+        <slot />
+    </div>
+</Standard>

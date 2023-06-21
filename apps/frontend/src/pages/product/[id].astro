@@ -1,0 +1,91 @@
+---
+import type {
+    Company,
+    PDFProduct,
+    ProductImage,
+    ProductPage,
+    ProductPageI18,
+    Video,
+} from "database";
+
+import { Middleware } from "@/util/middeware";
+import { API_URL } from "@/util/base-url";
+import Layout from "@/layouts/layout.astro";
+import pkg from "countries-list";
+const { languages, countries } = pkg;
+
+const result = await Middleware(Astro);
+if (result) {
+    return result;
+}
+
+export type FULL_PACKAGE = ProductPage & {
+    product_page_i18: ProductPageI18[];
+    pdfs: PDFProduct[];
+    video: Video[];
+    images: ProductImage[];
+    company: Company;
+};
+
+const page: FULL_PACKAGE | undefined = await fetch(
+    `${API_URL}/product/search/${Astro.params.id}`,
+    {}
+)
+    .then((res) => res.json())
+    .then((res) => {
+        if (!res.ok) {
+            throw new Error(res.statusText);
+        }
+        return res.company;
+    })
+    .catch(() => {
+        return null;
+    });
+
+if (!page) {
+    return new Response("Not found", { status: 404 });
+}
+---
+
+<Layout title={`${page.name} | Language selection`}>
+    <div class="w-full flex justify-center items-center mt-10 flex-col px-5">
+        <img
+            src={page.images[0]?.url ?? ""}
+            alt={`${page.name} icon`}
+            width="800"
+            height="800"
+            class="w-96 h-auto object-contain"
+        />
+
+        <div class="mt-10 sm:w-[40rem] w-full">
+            <p class="text-xl text-gray-400 font-light">Produkt</p>
+            <p class="text-3xl">{page.name}</p>
+        </div>
+
+        <div
+            class="w-full flex justify-center flex-col items-center mt-10 space-y-4 pb-10"
+        >
+            {
+                page.product_page_i18.map((value) => {
+                    const small =
+                        (languages as any)[value.language.toLowerCase()] ??
+                        (countries as any)[value.language.toUpperCase()];
+
+                    let lang = small
+                        ? small.native
+                        : `Not known ${value.language}`;
+
+                    return (
+                        <a
+                            class="bg-orange-400 sm:w-[20rem] w-9/12 h-14 rounded-md text-center text-white flex justify-center items-center border border-orange-300"
+                            href={`/product/${page.id}/${value.language}`}
+                            hreflang={value.language}
+                        >
+                            {lang} - {value.title}
+                        </a>
+                    );
+                })
+            }
+        </div>
+    </div>
+</Layout>
